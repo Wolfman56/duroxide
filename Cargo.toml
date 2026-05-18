@@ -54,8 +54,8 @@ members = [
     "sqlite-stress",
 ]
 
-# Clippy lints for better code quality
-[lints.clippy]
+# Clippy lints for better code quality (workspace-level — applies to all members)
+[workspace.lints.clippy]
 # Correctness (warn for now, can upgrade to deny after fixing)
 unwrap_used = "warn"
 expect_used = "warn"
@@ -66,3 +66,6 @@ large_enum_variant = "warn"
 
 # Style and maintainability
 missing_errors_doc = "warn"
+
+[lints]
+workspace = true
