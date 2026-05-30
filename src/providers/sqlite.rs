@@ -22,6 +22,9 @@ const DEFAULT_BULK_OPERATION_LIMIT: u32 = 1000;
 pub struct SqliteOptions {
     // Currently empty - lock timeout moved to RuntimeOptions
     // Kept for future provider-specific options
+    /// Override the connection pool size (default: 5).
+    /// Set to 1 for in-memory SQLite databases to avoid deadlocks.
+    pub max_connections: Option<u32>,
 }
 
 /// SQLite-backed provider with full transactional support
@@ -121,11 +124,15 @@ impl SqliteProvider {
     /// # Errors
     ///
     /// Returns an error if database connection or schema initialization fails.
-    pub async fn new(database_url: &str, _options: Option<SqliteOptions>) -> Result<Self, sqlx::Error> {
+    pub async fn new(database_url: &str, options: Option<SqliteOptions>) -> Result<Self, sqlx::Error> {
         // Configure SQLite for better concurrency
         let is_memory = database_url.contains(":memory:") || database_url.contains("mode=memory");
+        let max_connections = options
+            .as_ref()
+            .and_then(|o| o.max_connections)
+            .unwrap_or(5);
         let pool = SqlitePoolOptions::new()
-            .max_connections(5)
+            .max_connections(max_connections)
             .after_connect(move |conn, _meta| {
                 Box::pin({
                     let is_memory = is_memory;
